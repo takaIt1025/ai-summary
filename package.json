@@ -1,0 +1,23 @@
+{
+  "name": "obsidian-life-automation",
+  "version": "1.0.0",
+  "description": "Claude Code automation for Obsidian daily life management",
+  "main": "index.js",
+  "scripts": {
+    "daily": "node scripts/daily-note-generator.js",
+    "weekly": "node scripts/weekly-review.js",
+    "template": "node scripts/template-manager.js",
+    "thought:analyze": "node scripts/thought-to-document.js analyze",
+    "generate:report": "node scripts/thought-to-document.js report",
+    "generate:presentation": "node scripts/thought-to-document.js presentation",
+    "workflow:daily": "node scripts/daily-workflow.js"
+  },
+  "dependencies": {
+    "fs-extra": "^11.1.1",
+    "moment": "^2.29.4",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
