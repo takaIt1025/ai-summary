@@ -13,7 +13,7 @@
 公式サイトのダウンロードページから **macOS Universal** を選択してダウンロードします。
 
 ```
-https://pencil.evolus.vn/Downloads.html
+	https://pencil.evolus.vn/Downloads.html
 ```
 
 ### 2. インストール
