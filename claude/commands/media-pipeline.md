@@ -29,7 +29,7 @@
 | 3 | `.claude/media/phase3-design.md` | 設計（上位10記事分析・確認ポイント） |
 | 4 | `.claude/media/phase4-write.md` | 執筆（ドラフト・AI感排除） |
 | 5 | `.claude/media/phase5-quality.md` | 品質チェック（5視点95点） |
-| 6 | `.claude/media/phase6-publish.md` | 公開（画像生成・WordPress） |
+| 6 | `.claude/media/phase6-publish.md` | 公開（画像生成・Astro git push・デプロイ待機） |
 | 7 | `.claude/media/phase7-analyze.md` | 分析（インデックス・KPI） |
 
 ### 各Phase共通ルール

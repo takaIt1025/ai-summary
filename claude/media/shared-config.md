@@ -18,8 +18,10 @@
   "phase": "design_done",
   "kw": "Claude Code 使い方",
   "title": "",
+  "slug": "",
   "published_url": "",
-  "wp_post_id": null,
+  "git_commit": null,
+  "deploy_status": null,
   "quality_score": null,
   "auto_mode": false,
   "completed_phases": ["kw_done", "research_done", "design_done"],
@@ -37,5 +39,5 @@ kw_done → research_done → design_done → write_done → quality_done → pu
 ## 強制リセット
 
 ```bash
-echo '{"article_id":"","phase":"","kw":"","title":"","published_url":"","wp_post_id":null,"quality_score":null,"auto_mode":false,"completed_phases":[],"errors":[],"last_updated":""}' > automation/logs/progress.json
+echo '{"article_id":"","phase":"","kw":"","title":"","slug":"","published_url":"","git_commit":null,"deploy_status":null,"quality_score":null,"auto_mode":false,"completed_phases":[],"errors":[],"last_updated":""}' > automation/logs/progress.json
 ```

@@ -2,7 +2,7 @@
 
 ```
 【インプット】
-- progress.json: { "phase": "published", "wp_post_id": 1234, "published_url": "https://..." }
+- progress.json: { "phase": "published", "published_url": "https://...", "deploy_status": "deployed" }
 
 【アウトプット】
 - Googleインデックス登録完了
@@ -16,7 +16,20 @@
 
 ## 実行手順
 
-1. **Google Indexing APIでインデックス登録**
+1. **デプロイ完了確認（deploy_status が "timeout" の場合のリトライ）**
+
+   Phase 6でタイムアウトしていた場合、まずURLの疎通を確認してから進む。
+
+   ```bash
+   STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${PUBLISHED_URL}")
+   if [ "${STATUS}" != "200" ]; then
+     echo "URLが未応答（${STATUS}）。デプロイ完了を待ってから手動で再実行してください"
+     # errors に記録してスキップ
+   fi
+   ```
+
+2. **Google Indexing APIでインデックス登録**
+
    ```python
    import json
    from google.oauth2 import service_account
@@ -37,7 +50,7 @@
    ```
    - 失敗時: `errors` に記録してユーザーにGSC手動登録を依頼（スキップして続行）
 
-2. **スプレッドシート全タブ更新**
+3. **スプレッドシート全タブ更新**
 
    | タブ | 更新内容 |
    |---|---|
@@ -49,16 +62,17 @@
 
    - スプレッドシートAPI障害時: `errors` に記録して続行。後で手動同期
 
-3. **既存記事への内部リンク自動追加**
+4. **既存記事への内部リンク自動追加**
    - 公開済み全記事のH2見出しとKWを取得
    - 新規記事のKWが自然に挿入できる箇所を特定
-   - WordPress REST APIで既存記事を更新して内部リンクを追加
+   - 該当する既存記事の `.md` ファイルを直接編集してリンクを追加
+   - git commit / push して変更をデプロイ
    - 「内部リンク管理」タブに記録
 
-4. **kpi_feedback.md の更新**
+5. **kpi_feedback.md の更新**
    - 成功パターン・失敗パターン・リライト優先度を追記
    - 翌朝のパイプラインが読み込んで品質改善に活用
 
-5. **状態更新**
+6. **状態更新**
    - `progress.json` を `{ "phase": "analyzed" }` に更新
    - `errors` フィールドに残ったエラーがあればユーザーに最終レポートとして提示
