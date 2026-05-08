@@ -16,14 +16,23 @@ AUTO_MODE = true
   → Phase 3の確認をスキップ。品質95点以上で自動公開まで実行。
 ```
 
-**実行時の指定方法:**
-```
-# 手動確認モード（推奨・初期運用）
-/media-pipeline AUTO_MODE=false
+**設定の優先順位と方法:**
 
-# 全自動モード（安定稼働後）
-/media-pipeline AUTO_MODE=true
 ```
+優先度1（最高）: 実行時の $ARGUMENTS に含まれる指定
+  例: /media-pipeline AUTO_MODE=true
+
+優先度2: progress.json の "auto_mode" フィールド
+  → 前回実行時の値が残っている場合に引き継ぐ
+
+優先度3（デフォルト）: false
+  → $ARGUMENTS になく、progress.json にも値がない場合
+```
+
+**progress.json の "auto_mode" フィールドの扱い:**
+- $ARGUMENTS で指定があった場合 → progress.json に上書き記録
+- $ARGUMENTS で指定がない場合 → progress.json の値を読み取って使用
+- どちらもない場合 → false として動作し、progress.json に false を記録
 
 ---
 
@@ -49,22 +58,33 @@ AUTO_MODE = true
 ```json
 {
   "article_id": "042",
-  "phase": "phase3_done",
+  "phase": "design_done",
   "kw": "Claude Code 使い方",
   "title": "",
   "wp_post_id": null,
   "quality_score": null,
   "auto_mode": false,
-  "completed_phases": ["phase1", "phase2", "phase3"],
+  "completed_phases": ["kw_done", "research_done", "design_done"],
   "errors": [],
   "last_updated": "2026-05-08T10:00:00"
 }
 ```
 
-**phaseの値:**
+**phaseの値（全フィールドでこの表記を使う）:**
 ```
 kw_done → research_done → design_done → write_done → quality_done → published → analyzed
 ```
+
+**completed_phases との対応:**
+| phase 値 | completed_phases に追加する値 |
+|---|---|
+| kw_done | "kw_done" |
+| research_done | "research_done" |
+| design_done | "design_done" |
+| write_done | "write_done" |
+| quality_done | "quality_done" |
+| published | "published" |
+| analyzed | "analyzed" |
 
 ---
 
@@ -511,8 +531,43 @@ v1と同一。`owned-media-automation-setup.md` の Section 3.2〜3.5 を参照�
 **目的**: インデックス登録、スプレッドシート更新、内部リンク追加、KPIレポート生成。
 
 **実行手順**:
-→ v1の手順と同一（Section 4 Phase 7 を参照）。
-ただし各ステップ完了後に `progress.json` の `errors` フィールドにエラーを記録すること。
+
+1. **Google Indexing APIでインデックス登録**
+   ```python
+   from google.oauth2 import service_account
+   from googleapiclient.discovery import build
+
+   credentials = service_account.Credentials.from_service_account_file(
+       'indexing-service-account.json',
+       scopes=['https://www.googleapis.com/auth/indexing']
+   )
+   service = build('indexing', 'v3', credentials=credentials)
+   service.urlNotifications().publish(
+       body={'url': '公開済みURL', 'type': 'URL_UPDATED'}
+   ).execute()
+   ```
+   - 失敗時: `errors` に記録してユーザーにGSC手動登録を依頼（スキップして続行）
+
+2. **スプレッドシート更新（共通エラーハンドリング適用）**
+   - ダッシュボード・記事作成ログ・KW戦略・トピッククラスター・KPIレポートの各タブを更新
+   - スプレッドシートAPI障害時: `progress.json` の `errors` に記録して続行。後で手動同期
+
+3. **既存記事への内部リンク自動追加**
+   - 公開済み全記事のH2見出しとKWを取得
+   - 新規記事のKWが自然に挿入できる箇所を特定
+   - WordPress REST APIで既存記事を更新して内部リンクを追加
+   - 内部リンク管理タブに記録
+
+4. **kpi_feedback.md の更新**
+   - 成功パターン・失敗パターン・リライト優先度を追記
+   - 翌朝のパイプラインが読み込んで品質改善に活用
+
+5. **状態更新**
+   ```json
+   { "phase": "analyzed", "completed_phases": [..., "analyzed"] }
+   ```
+   - `progress.json` を更新
+   - `errors` フィールドに残ったエラーがあればユーザーに最終レポートとして提示
 
 ---
 
@@ -525,13 +580,40 @@ v1と同一。`owned-media-automation-setup.md` の Section 3.2〜3.5 を参照�
 | Daily KPI Report | 毎日 22:13 | Phase 7のKPIレポートのみ |
 | Weekly Optimize | 月曜 10:23 | カニバリ検出・リライト・内部リンク最適化 |
 
+### 再開ロジック（中断時の挙動）
+
+パイプライン開始時に `progress.json` を読み込み、以下のルールで再開Phaseを決定する。
+
+```
+progress.json の phase 値 → 再開するPhase
+─────────────────────────────────────────
+""（空）または "analyzed"  → Phase 1 から新規開始
+"kw_done"                  → Phase 2 から再開
+"research_done"            → Phase 3 から再開
+"design_done"              → Phase 4 から再開
+"write_done"               → Phase 5 から再開
+"quality_done"             → Phase 6 から再開
+"published"                → Phase 7 から再開
+```
+
+再開時は以下を必ず確認する:
+1. 再開Phaseの【インプット】ファイルが存在するか
+2. 存在しない場合は1つ前のPhaseから再実行する
+3. `errors` フィールドにエラーが残っている場合は内容をユーザーに報告してから再開
+
+**強制リセット（最初からやり直す場合）:**
+```bash
+echo '{"article_id":"","phase":"","kw":"","title":"","wp_post_id":null,"quality_score":null,"auto_mode":false,"completed_phases":[],"errors":[],"last_updated":""}' > automation/logs/progress.json
+```
+
 ### パイプライン実行フロー
 ```
 1. kpi_feedback.md を読み込む（前日の成功/失敗パターンを反映）
-2. progress.json を確認（前回中断していた場合は途中から再開）
-3. Phase 1〜7 を順番に実行
-4. 各Phase完了後に progress.json を更新
-5. 全Phase完了後に完了通知
+2. progress.json を読み込み、再開ロジックで開始Phaseを決定
+3. AUTO_MODE を確定（$ARGUMENTS → progress.json → デフォルトfalse の優先順）
+4. 決定したPhaseから順番に実行
+5. 各Phase完了後に progress.json を更新
+6. 全Phase完了後に完了通知
 ```
 
 ---
