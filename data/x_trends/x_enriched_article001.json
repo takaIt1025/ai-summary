@@ -1,0 +1,45 @@
+{
+  "article_id": "001",
+  "kw": "Claude Code hooks 使い方",
+  "collected_at": "2026-05-12",
+  "source": "WebSearch（X API代替）",
+  "insights": [
+    {
+      "topic": "hooks vs CLAUDE.md の違い",
+      "insight": "CLAUDE.mdの指示は確率的（遵守率100%ではない）、Hooksは毎回確実に実行される。「毎回必ずやりたい処理」はHooksに委ねるべき",
+      "pain_point": "CLAUDE.mdを書いても守られないことがある"
+    },
+    {
+      "topic": "最も人気のユースケース",
+      "insight": "①自動フォーマット（prettier/black/eslint）②処理完了通知（macOS通知・Slack）③危険コマンドのブロック（rm -rf、DROP TABLE）",
+      "pain_point": "Claudeが編集後にフォーマットが崩れる"
+    },
+    {
+      "topic": "設定の複雑さ",
+      "insight": "settings.jsonに書くだけだが、exit codeの意味（0=OK, 2=ブロック）やjqでのJSONパースが初心者には難しい",
+      "pain_point": "どこに何を書けばいいか分からない"
+    },
+    {
+      "topic": "イベント種別",
+      "insight": "PreToolUse/PostToolUse/Stop/Notification/SessionStart/SessionEnd が主要イベント。最新版は14〜23種類まで拡張",
+      "pain_point": "イベントが多すぎてどれを使えばいいか分からない"
+    },
+    {
+      "topic": "設定場所の使い分け",
+      "insight": "プロジェクト共通（lint/test）→ .claude/settings.json、個人設定（通知/ログ）→ ~/.claude/settings.json",
+      "pain_point": "チームと個人の設定を混在させてしまう"
+    }
+  ],
+  "competitor_content_gaps": [
+    "exit codeの意味を丁寧に解説した記事が少ない",
+    "コピペですぐ使えるレシピ集が求められている",
+    "初心者向けのステップバイステップ解説が不足"
+  ],
+  "sources": [
+    "https://code.claude.com/docs/ja/hooks-guide",
+    "https://qiita.com/nogataka/items/17fc8d9c2b2efde570a6",
+    "https://dev.classmethod.jp/articles/claude-code-hooks-basic-usage/",
+    "https://harmonic-society.co.jp/claude-code-hooks/",
+    "https://note.com/tomada/n/n3b0ca912af73"
+  ]
+}

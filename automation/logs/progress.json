@@ -1,0 +1,15 @@
+{
+  "article_id": "001",
+  "phase": "quality_done",
+  "kw": "Claude Code hooks 使い方",
+  "title": "",
+  "slug": "",
+  "published_url": "",
+  "git_commit": null,
+  "deploy_status": null,
+  "quality_score": 90,
+  "auto_mode": false,
+  "completed_phases": ["kw_done", "research_done", "design_done", "write_done", "quality_done"],
+  "errors": [],
+  "last_updated": "2026-05-12T00:00:00"
+}

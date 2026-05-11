@@ -1,0 +1,50 @@
+Claude Code hooks リサーチまとめ（WebSearch代替、2026-05-12）
+
+■ 主要情報源
+- 公式ドキュメント: https://code.claude.com/docs/ja/hooks-guide
+- Qiita（全14イベント解説）: https://qiita.com/nogataka/items/17fc8d9c2b2efde570a6
+- DevelopersIO: https://dev.classmethod.jp/articles/claude-code-hooks-basic-usage/
+- note（通知+チェック処理）: https://note.com/tomada/n/n3b0ca912af73
+- azukiazusa.dev（フォーマッター実行）: https://azukiazusa.dev/blog/claude-code-hooks-run-formatter/
+
+■ Hooks の基本概念
+- Claude Codeのライフサイクル上の特定ポイントで自動実行されるユーザー定義処理
+- exit code 0 = 成功、exit code 2 = ブロック（PreToolUseで有効）
+- settings.jsonで設定。EventName + matcher + command の3要素
+
+■ イベント一覧（主要）
+1. SessionStart - セッション開始時
+2. UserPromptSubmit - ユーザーがプロンプト送信時
+3. PreToolUse - ツール実行前（ブロック可能）
+4. PostToolUse - ツール実行後
+5. PostToolUseFailure - ツール失敗後
+6. Stop - Claude応答完了時
+7. StopFailure - 失敗時
+8. Notification - 通知送信時
+9. SessionEnd - セッション終了時
+10. SubagentStop - サブエージェント完了時
+
+■ 実践ユースケース TOP5
+1. 自動フォーマット（prettier/eslint/black）- PostToolUseで実行
+2. 完了通知（macOS通知・Slack webhook）- Stopで実行
+3. 危険コマンドブロック（rm -rf等）- PreToolUseでexit 2
+4. テスト自動実行 - PostToolUseで実行
+5. ログ記録 - PreToolUse/PostToolUseで実行
+
+■ 設定例（notifications）
+{
+  "hooks": {
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "osascript -e 'display notification \"Claude finished\" with title \"Claude Code\"'"
+      }]
+    }]
+  }
+}
+
+■ 競合記事の弱点（差別化ポイント）
+- exit code の意味を丁寧に説明していない
+- コピペできるレシピ集が少ない
+- jqコマンドの使い方を前提知識として要求している
+- 初心者向けセットアップ手順が省略されている
